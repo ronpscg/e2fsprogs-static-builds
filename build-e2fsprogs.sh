@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# An example of how creation e2fsprogs for different architectures
+# An example of how to create e2fsprogs statically for different architectures
 #
 # Used to accompany The PSCG's training/Ron Munitz's talks
 #
-: ${SRC_E2FSPROGS=$(readlink -f ./e2fsprogs)}
+: ${SRC_PROJECT=$(readlink -f ./e2fsprogs)}
 
 # ./configure vs. make:
 # Could use --prefix in configure, but it's working with another folder, and we don't really want the entire set of tools here.
@@ -20,10 +20,10 @@
 #
 # $1: build directory
 #
-build_e2fsprogs_without_installing() (
+build_without_installing() (
 	mkdir $1
 	cd $1
-	$SRC_E2FSPROGS/configure LDFLAGS=-static  --host=${CROSS_COMPILE%-} || exit 1
+	$SRC_PROJECT/configure LDFLAGS=-static  --host=${CROSS_COMPILE%-} || exit 1
 	make -j$(nproc)
 	find . -executable -not -type d | xargs ${CROSS_COMPILE}strip -s
 )
@@ -33,11 +33,11 @@ build_e2fsprogs_without_installing() (
 # $1: build directory
 # $2: install directory
 #
-build_e2fsprogs_with_installing() (
+build_with_installing() (
 	installdir=$(readlink -f $2)
 	mkdir $1 # You must create the build and install directories. make will not do that for you
 	cd $1
-	$SRC_E2FSPROGS/configure LDFLAGS=--static  --host=${CROSS_COMPILE%-} || exit 1
+	$SRC_PROJECT/configure LDFLAGS=--static  --host=${CROSS_COMPILE%-} || exit 1
 	make -j$(nproc) DESTDIR=$installdir install-strip 
 )
 
@@ -48,7 +48,7 @@ build_e2fsprogs_with_installing() (
 build_for_several_tuples() {
 	for tuple in x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu arm-linux-gnueabi ; do	
 		export CROSS_COMPILE=${tuple}- # we'll later strip it but CROSS_COMPILE is super standard, and autotools is "a little less standard"
-		build_e2fsprogs_with_installing $tuple-build $tuple-install 2> err.$tuple
+		build_with_installing $tuple-build $tuple-install 2> err.$tuple
 	done
 
 }
@@ -58,6 +58,7 @@ fetch() {
 }
 
 main() {
+	fetch || exit 1
 	build_for_several_tuples
 }
 
