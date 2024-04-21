@@ -57,9 +57,27 @@ fetch() {
 	git clone https://github.com/tytso/e2fsprogs.git -b v1.47.0
 }
 
+#
+# Build 32 bit x86 on x86_64 hosts. This is not cross compilation, but rather requires some make flags and the installation of multilib
+#
+build_and_install_32bitx86_on_x86_64() {
+	export CROSS_COMPILE=""
+	local tuple=i386-linux-gnu # pretty much arbitrary
+	local builddir=$PWD/$tuple-build
+	local installdir=$PWD/$tuple-install
+	mkdir $builddir
+	cd $builddir || exit 1
+	$SRC_PROJECT/configure LDFLAGS="--static -m32" CFLAGS=-m32 || exit 1
+	make -j$(nproc) DESTDIR=$installdir install-strip 2>err.$tuple
+
+}
+
 main() {
 	fetch || exit 1
 	build_for_several_tuples
+	if [ "$(uname -m)" = "x86_64" ] ; then
+		build_and_install_32bitx86_on_x86_64
+	fi
 }
 
 main $@
