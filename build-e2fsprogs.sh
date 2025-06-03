@@ -5,6 +5,7 @@
 # Used to accompany The PSCG's training/Ron Munitz's talks
 #
 : ${SRC_PROJECT=$(readlink -f ./e2fsprogs)}
+: ${USE_MULTILIB_FOR_32BIT_X86=false}	# if true - use -m32. This conflicts with all cross-compilers. A better alternative for 2025 is to use native toolchain distro, i686-linux-gnu-...
 
 # ./configure vs. make:
 # Could use --prefix in configure, but it's working with another folder, and we don't really want the entire set of tools here.
@@ -46,7 +47,7 @@ build_with_installing() (
 # The function above can be used from outside a script, assuming that the CROSS_COMPILE variable is set
 # It may however need more configuration if you do not build for gnulibc
 build_for_several_tuples() {
-	for tuple in x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu arm-linux-gnueabi ; do	
+	for tuple in x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu arm-linux-gnueabi i686-linux-gnu ; do	
 		export CROSS_COMPILE=${tuple}- # we'll later strip it but CROSS_COMPILE is super standard, and autotools is "a little less standard"
 		build_with_installing $tuple-build $tuple-install 2> err.$tuple
 	done
@@ -76,7 +77,9 @@ main() {
 	fetch || exit 1
 	build_for_several_tuples
 	if [ "$(uname -m)" = "x86_64" ] ; then
-		build_and_install_32bitx86_on_x86_64
+		if [ "$USE_MULTILIB_FOR_32BIT_X86" = "true" ] ; then
+			build_and_install_32bitx86_on_x86_64
+		fi
 	fi
 }
 
