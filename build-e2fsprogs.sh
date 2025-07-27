@@ -47,7 +47,7 @@ build_with_installing() (
 # The function above can be used from outside a script, assuming that the CROSS_COMPILE variable is set
 # It may however need more configuration if you do not build for gnulibc
 build_for_several_tuples() {
-	for tuple in x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu arm-linux-gnueabi i686-linux-gnu ; do	
+	for tuple in x86_64-linux-gnu aarch64-linux-gnu riscv64-linux-gnu arm-linux-gnueabi i686-linux-gnu loongarch64-linux-gnu ; do
 		export CROSS_COMPILE=${tuple}- # we'll later strip it but CROSS_COMPILE is super standard, and autotools is "a little less standard"
 		build_with_installing $tuple-build $tuple-install 2> err.$tuple
 	done
